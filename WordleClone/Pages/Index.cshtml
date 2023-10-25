@@ -15,35 +15,27 @@
         <div class="row">
             @for (int j = 0; j < 5; j++)
             {
-                var color = Model.Colors[i].Length > j ? Model.Colors[i][j] : "white";
-                var letter = Model.Words[i].Length > j ? Model.Words[i][j] : ' ';
+                var color = Model.Words[i][j].Color;
+                var letter = Model.Words[i][j].Letter;
                 if (Model.CurrentRow > i && Model.GuessSubmitted != i)
                 {
                     <div class="tile" data-state="flipped">
-                        <div class="tile-front" style="background-color: @color;">@char.ToUpper(letter)</div>
-                        <div class="tile-back" style="background-color:@color;">@char.ToUpper(letter)</div>
+                        <div class="tile-front" style="background-color: @color;">@letter.ToUpper()</div>
+                        <div class="tile-back" style="background-color:@color;">@letter.ToUpper()</div>
                     </div>
                 }
                 else
                 {
                     
                     <div class="tile" data-state="unflipped">
-                        <div class="tile-front" style="background-color: white;" >@char.ToUpper(letter)</div>
-                        <div class="tile-back" style="background-color: @color;">@char.ToUpper(letter)</div>
+                        <div class="tile-front" style="background-color: white;" >@letter.ToUpper()</div>
+                        <div class="tile-back" style="background-color: @color;">@letter.ToUpper()</div>
                     </div>
                 }
             }
         </div>
     }
 </div>
-
-@if (Model.GuessSubmitted >= 0)  // Assuming that LastGuessedRowIndex is -1 by default, indicating no guessed row
-{
-    <script>
-        // Call the function to start the animation upon page load for the specified row
-        flipTilesSequentially(@Model.GuessSubmitted);
-    </script>
-}
 
 <form method="post">
     <div class="keyboard">
@@ -56,6 +48,13 @@
     </div>
 </form>
 
+@if (Model.GuessSubmitted >= 0)  // Assuming that LastGuessedRowIndex is -1 by default, indicating no guessed row
+{
+    <script>
+        // Call the function to start the animation upon page load for the specified row
+        flipTilesSequentially(@Model.GuessSubmitted);
+    </script>
+}
 
 <style>
     .tile {

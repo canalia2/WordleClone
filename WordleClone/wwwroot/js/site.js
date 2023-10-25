@@ -6,8 +6,9 @@ function flipTilesSequentially(rowIndex) {
     var row = document.querySelectorAll('.wordle-grid .row')[rowIndex];
     var tiles = row.querySelectorAll('.tile');
     var delay = 100;  // initial delay
+    disableButtons(true);
 
-    tiles.forEach(tile => {
+    tiles.forEach((tile,index) => {
         setTimeout(() => {
             tile.style.transform = 'rotateY(180deg)';
             
@@ -26,6 +27,11 @@ function flipTilesSequentially(rowIndex) {
 
                 // Remove the event listener after it's executed to prevent multiple bindings
                 tile.removeEventListener('transitionend', handleFlip);
+
+                if (index === tiles.length - 1) {
+                    // Re-enable all buttons after the last tile has completed its transition
+                    disableButtons(false);
+                }
             });
 
         }, delay);
@@ -34,7 +40,11 @@ function flipTilesSequentially(rowIndex) {
     });
 }
 
+function disableButtons(disable) {
+    // Get all buttons within the keyboard div
+    var buttons = document.querySelectorAll('.keyboard button');
 
-
-
-console.log("js loaded");
+    buttons.forEach(button => {
+        button.disabled = disable;
+    });
+}

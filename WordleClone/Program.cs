@@ -1,3 +1,5 @@
+using WordleClone.src;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,6 +13,10 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddTransient<IStorage, SessionStorage>();
+builder.Services.AddTransient<WordleFactory>();
 
 var app = builder.Build();
 app.UseSession();

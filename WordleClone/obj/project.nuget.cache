@@ -1,8 +1,22 @@
 {
   "version": 2,
-  "dgSpecHash": "RSILx6TEV1y2KMQlFS/JKEslttpzOeqnXvigQsBG/FGI+nzJO3K/oE5me0SLgal+3mfYcvdbcidXADm0WP9XCw==",
+  "dgSpecHash": "A8ZLduS6WTzrejGNf0ag3GwB7g1qhs3GrArYLfi17AwcZFVKNKtu5oyl0TPbSVHcXuvmQ0kBH/gUxmWO/O/4Sw==",
   "success": true,
   "projectFilePath": "C:\\gitrepos\\WordleClone\\WordleClone\\WordleClone.csproj",
-  "expectedPackageFiles": [],
-  "logs": []
+  "expectedPackageFiles": [
+    "C:\\Users\\canal\\.nuget\\packages\\netspell\\2.1.7\\netspell.2.1.7.nupkg.sha512",
+    "C:\\Users\\canal\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'NetSpell 2.1.7' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net6.0'. This package may not be fully compatible with your project.",
+      "libraryId": "NetSpell",
+      "targetGraphs": [
+        "net6.0"
+      ]
+    }
+  ]
 }
