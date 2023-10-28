@@ -1,9 +1,4 @@
-﻿using NetSpell.SpellChecker;
-using NetSpell.SpellChecker.Dictionary;
-using Newtonsoft.Json;
-using System;
-using System.Globalization;
-
+﻿
 namespace WordleClone.src
 {
     public class Wordle
@@ -34,10 +29,40 @@ namespace WordleClone.src
             var row = GetCurrentRow();
             return Words[row].State;
         }
-        public int GuessSubmitted()
+
+        public WordleResult GetCurrentResult()
         {
             var row = GetCurrentRow();
-            return Words[row].State == WordleState.Guessing ? row : -1;
+            return Words[row].Result;
+        }
+
+        public string GetWrongLetters()
+        {
+            var row = GetCurrentRow();
+            var used = new HashSet<string>();
+
+            for (int i = 0; i <= row; i++)
+            {
+                var greyLetters = Words[i].GetLettersByColor(x => x == "grey");
+                var goodLetters = Words[i].GetLettersByColor(x => x == "yellow" || x == "green");
+                used.UnionWith(greyLetters.Select(x => x.Letter));
+
+                foreach (var letter in  goodLetters)
+                {
+                    if (used.Contains(letter.Letter))
+                    {
+                        used.Remove(letter.Letter);
+                    }
+                }
+            }
+
+            return string.Join(string.Empty, used);
+        }
+
+        public bool GuessSubmitted()
+        {
+            var row = GetCurrentRow();
+            return Words[row].State == WordleState.Guessing;
         }
 
         /// <summary>
@@ -66,6 +91,7 @@ namespace WordleClone.src
         {
             var row = GetCurrentRow();
             var result = await EvaluateGuess(row);
+            Words[row].Result = result;
 
             if (result == WordleResult.IncorrectWord || result == WordleResult.Correct)
                 Words[row].SetColors(_word);
@@ -78,15 +104,15 @@ namespace WordleClone.src
             var word = Words[row].GetWord();
             Words[row].State = WordleState.Guessing;
 
+            if (word.Length < 5)
+                return WordleResult.IncorrectLength;
+
             for (int i = word.Length - 1; i >= 0; i--)
-            {
-                if (word[i] == ' ')
-                {
-                    return WordleResult.IncorrectLength;
-                }
-                else if (word[i] != _word[i])
+            {   
+                if (word[i] != _word[i])
                 {
                     bool IsWord = await IsWordAsync(word);
+
                     if (IsWord)
                     {
                         return WordleResult.IncorrectWord;
@@ -101,16 +127,20 @@ namespace WordleClone.src
             return WordleResult.Correct;
         }
 
-        public async Task<bool> AdvanceRow()
+        public bool AdvanceRow()
         {
             var row = GetCurrentRow();
             var advanced = false;    
 
             if (Words[row].State == WordleState.Guessing)
             {
-                if (await GetGuessResult() == WordleResult.Correct)
+                if (Words[row].Result == WordleResult.Correct)
                 {
                     Words[row].State = WordleState.Solved;
+                }
+                else if (Words[row].Result == WordleResult.NotAWord || Words[row].Result == WordleResult.IncorrectLength)
+                {
+                    Words[row].State = WordleState.Active;
                 }
                 else
                 {
@@ -129,10 +159,12 @@ namespace WordleClone.src
         {
             var client = new HttpClient();
             string? apiUrl = $"https://api.dictionaryapi.dev/api/v2/entries/en/{word}";
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
             var isWord = true;
 
             HttpResponseMessage response = await client.GetAsync(apiUrl);
-            if (response.IsSuccessStatusCode)
+
+            if (!response.IsSuccessStatusCode)
             {
                 string body = await response.Content.ReadAsStringAsync();
 
@@ -150,7 +182,7 @@ namespace WordleClone.src
 
             for (int row = 0; row < Words.Length; row++)
             {
-                if (Words[row].State == WordleState.Active || Words[row].State == WordleState.Guessing)
+                if (Words[row].State == WordleState.Active || Words[row].State == WordleState.Guessing || Words[row].State == WordleState.Solved)
                 {
                     currentRow = row;
                     break;
@@ -175,7 +207,8 @@ namespace WordleClone.src
         Correct,
         NotAWord,
         IncorrectLength,
-        IncorrectWord
+        IncorrectWord,
+        None
     }
 
     public enum WordleState
@@ -197,43 +230,44 @@ namespace WordleClone.src
         public int Length { get { return _letters.Length; } }
 
         private Tile[] _letters;
-        public WordleState State { get;set; }
-
-        public Word(WordleState state, string letters, string[] colors) 
+        public WordleState State { get; set; }
+        public WordleResult Result { get; set; }
+        public Word(WordleState state, string letters, string[] colors, WordleResult result)
         {
             State = state;
+            Result = result;
             InitWord(letters, colors);
         }
 
-        public bool AddLetter(string letter) 
+        public bool AddLetter(string letter)
         {
             int index;
-            bool success = false;
+            bool added = false;
 
             if ((index = _letters.Select(x => x.Letter).ToList().IndexOf(string.Empty)) != -1)
             {
                 _letters[index].Letter = letter;
-                success = true;
+                added = true;
             }
 
-            return success;
+            return added;
         }
 
         public bool DeleteLetter()
         {
-            bool success = false;
+            bool deleted = false;
 
             for (int i = _letters.Length - 1; i >= 0; i--)
             {
                 if (_letters[i].Letter != string.Empty)
                 {
                     _letters[i].Letter = string.Empty;
-                    success = true;
+                    deleted = true;
                     break;
                 }
             }
 
-            return success;
+            return deleted;
         }
 
         public void SetColors(string targetWord)
@@ -273,10 +307,14 @@ namespace WordleClone.src
             return string.Join(string.Empty, _letters.Select(x => x.Letter));
         }
 
-
         public string[] GetColors()
         {
             return _letters.Select(x => x.Color).ToArray();
+        }
+
+        public IEnumerable<Tile> GetLettersByColor(params Func<string, bool>[] predicates)
+        {
+            return _letters.Where(letter => predicates.Any(predicate => predicate(letter.Color ?? string.Empty))).ToList();
         }
 
         private void InitWord(string letters, string[] colors)

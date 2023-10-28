@@ -9,6 +9,8 @@
         int GetGuessRow();
         int GetState(int row);
         void SetState(int row, WordleState state);
+        int GetGuessResult(int row);
+        void SetGuessResult(int row, WordleResult result);
         
     }
 }

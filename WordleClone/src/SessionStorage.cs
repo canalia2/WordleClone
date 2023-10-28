@@ -43,10 +43,18 @@ namespace WordleClone.src
         {
             _session.SetInt32($"{row}s", (int)state);
         }
-
         public int GetGuessRow()
         {
             return _session.GetInt32("Guess") ?? -1;
+        }
+        public int GetGuessResult(int row)
+        {
+            return _session.GetInt32($"{row}gr") ?? (int)WordleResult.None;
+        }
+
+        public void SetGuessResult(int row, WordleResult result)
+        {
+            _session.SetInt32($"{row}gr", (int)result);
         }
     }
 }

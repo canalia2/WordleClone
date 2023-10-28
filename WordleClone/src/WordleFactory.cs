@@ -21,6 +21,7 @@
                 string? word;
                 string[] colors;
                 WordleState state;
+                WordleResult result;
 
                 if ((word = _storage.GetWord(i)) is null)
                 {
@@ -29,8 +30,9 @@
 
                 colors = GetColors(i);
                 state = GetState(i);
+                result = (WordleResult)_storage.GetGuessResult(i);
 
-                words[i] = new Word(state, word, colors);
+                words[i] = new Word(state, word, colors, result);
             }
 
             return new Wordle(words, _environment);

@@ -2,11 +2,11 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
-function flipTilesSequentially(rowIndex) {
+function flipTilesSequentially(rowIndex, keyboard, correct) {
     var row = document.querySelectorAll('.wordle-grid .row')[rowIndex];
     var tiles = row.querySelectorAll('.tile');
     var delay = 100;  // initial delay
-    disableButtons(true);
+    toggleButtons(true, keyboard);
 
     tiles.forEach((tile,index) => {
         setTimeout(() => {
@@ -30,7 +30,9 @@ function flipTilesSequentially(rowIndex) {
 
                 if (index === tiles.length - 1) {
                     // Re-enable all buttons after the last tile has completed its transition
-                    disableButtons(false);
+                    toggleButtons(false, keyboard);
+                    if (correct)
+                        jumpTilesSequentially(rowIndex)
                 }
             });
 
@@ -40,11 +42,62 @@ function flipTilesSequentially(rowIndex) {
     });
 }
 
-function disableButtons(disable) {
+function toggleButtons(disable, keyboard) {
     // Get all buttons within the keyboard div
     var buttons = document.querySelectorAll('.keyboard button');
 
     buttons.forEach(button => {
-        button.disabled = disable;
+        if (!disable) {
+            if (button.classList.contains('enter-key') || button.classList.contains('delete-key')) {
+                button.disabled = false;
+            }
+            else {
+                button.disabled = !keyboard.find(key => key.value === button.innerText).active;
+            }
+        }
+        else {
+            button.disabled = disable;
+        }
     });
 }
+function jumpTilesSequentially(rowIndex) {
+    var row = document.querySelectorAll('.wordle-grid .row')[rowIndex];
+    var tiles = row.querySelectorAll('.tile');
+    var delay = 100;  // initial delay
+
+    tiles.forEach((tile, index) => {
+        setTimeout(() => {
+            tile.style.animation = 'jump 0.5s';
+            var tileFront = tile.querySelector('.tile-front');
+            var tileBack = tile.querySelector('.tile-back');
+            tileFront.style.backgroundColor = 'green';
+
+            // Remove the animation once it completes to allow re-triggering
+            tile.addEventListener('animationend', function handleAnimationEnd() {
+                tile.style.animation = '';
+                tile.removeEventListener('animationend', handleAnimationEnd);
+                tileBack.style.backgroundColor = 'hotpink';
+                if (index === tiles.length - 1) { // Check if it's the last tile
+                    setTimeout(function () {
+                        document.getElementById("overlayModal").style.display = "block";
+                    }, 1000);
+                }
+            });
+
+        }, delay);
+
+        delay += 100;  // delay for the next tile
+    });
+}
+
+function shakeRow(rowIndex) {
+    var row = document.querySelectorAll('.wordle-grid .row')[rowIndex];
+    var tiles = row.querySelectorAll('.tile');
+    tiles.forEach(tile => {
+        tile.classList.add("shake-tile");
+        tile.addEventListener('animationend', function () {
+            tile.classList.remove("shake-tile");
+        });
+    });
+}
+

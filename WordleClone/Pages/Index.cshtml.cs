@@ -1,47 +1,25 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Diagnostics.Metrics;
-using System.Text;
 using WordleClone.src;
 
 namespace WordleClone.Pages
 {
     public class IndexModel : PageModel
     {
-        public List<char> Keyboard { get; } = "QWERTYUIOPASDFGHJKLZXCVBNM".ToList();
-        public int GuessSubmitted { get; private set; } = -1;
+        public List<Key> Keyboard { get; private set; }
+        public bool GuessSubmitted { get; private set; }
         public int CurrentRow { get; private set; }
         public Word[] Words { get; private set; }
+        public WordleResult Result { get; private set; }
 
-        private readonly ISession _session;
-
-        private string[] _words;
-        private string[][] _colors;
-
-        private string Word = "APRIL";
         private Wordle _wordle;
         private IStorage _storage;
         public IndexModel(IStorage storage, WordleFactory factory)
         {
             _storage = storage;
             _wordle = factory.Create();
-            //SetWordleData();
+            SetWordleData();
         }
-
-        public async Task OnGet()
-        {
-            await SetWordleData();
-        }
-
-        //public async Task OnPageHandlerSelectedAsync(PageHandlerExecutingContext context)
-        //{
-        //    base.OnPageHandlerExecuting(context);
-
-        //    await SetWordleData();
-        //}
-
 
         public IActionResult OnPostAddLetter(string letter)
         {
@@ -79,38 +57,44 @@ namespace WordleClone.Pages
                 return RedirectToPage();
 
             var result = await _wordle.GetGuessResult();
+            _storage.SetGuessResult(_wordle.GetCurrentRow(), result);
 
             if (result == WordleResult.Correct || result == WordleResult.IncorrectWord)
             {
                 var colors = _wordle.GetCurrentColors();
-                _storage.SetState(_wordle.GetCurrentRow(), _wordle.GetCurrentState());
                 _storage.SetColors(_wordle.GetCurrentRow(), colors);
             }
+
+            _storage.SetState(_wordle.GetCurrentRow(), _wordle.GetCurrentState());
 
             return RedirectToPage();
         }
 
-        public string[] GetRowColors(int row)
-        {
-            var colorCode = _session.GetString($"{row}c") ?? string.Empty;
-
-            return colorCode.Split('-');
-        }
-
-        private async Task SetWordleData()
+        private void SetWordleData()
         {
             GuessSubmitted = _wordle.GuessSubmitted();
             CurrentRow = _wordle.GetCurrentRow();
             Words = _wordle.Words;
+            Result = _wordle.GetCurrentResult();
+            var usedLetters = _wordle.GetWrongLetters();
+            Keyboard = new List<Key>();
+            "QWERTYUIOPASDFGHJKLZXCVBNM".ToList().ForEach(key => Keyboard.Add(new Key(key.ToString(),!usedLetters.Contains(key))));
+            Keyboard.Insert(Keyboard.FindIndex(key => key.Value == "Z"), new Key("ENTER", true));
+            Keyboard.Add(new Key("DELETE", true));
 
             if (_wordle.GetCurrentState() == WordleState.Guessing)
             {
-                if (await _wordle.AdvanceRow())
+                if (_wordle.AdvanceRow())
                 {
                     var row = _wordle.GetCurrentRow();
                     _storage.SetWord(row, _wordle.GetCurrentWord());
                     _storage.SetState(row, _wordle.GetCurrentState());
                     _storage.SetState(row - 1, _wordle.Words[row - 1].State);
+                }
+                else
+                {
+                    var row = _wordle.GetCurrentRow();
+                    _storage.SetState(row, _wordle.GetCurrentState());
                 }
             }
         }

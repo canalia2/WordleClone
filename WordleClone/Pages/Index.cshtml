@@ -5,19 +5,20 @@
 }
 
 <script src="~/js/site.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 
 <h2>Wordle</h2>
 
 <div class="wordle-grid">
-    @for (int i = 0; i < 5; i++)
+    @for (int i = 0; i < Model.Words.Length; i++)
     {
         <div class="row">
-            @for (int j = 0; j < 5; j++)
+            @for (int j = 0; j < Model.Words[i].Length; j++)
             {
                 var color = Model.Words[i][j].Color;
                 var letter = Model.Words[i][j].Letter;
-                if (Model.CurrentRow > i && Model.GuessSubmitted != i)
+                if (Model.CurrentRow > i)
                 {
                     <div class="tile" data-state="flipped">
                         <div class="tile-front" style="background-color: @color;">@letter.ToUpper()</div>
@@ -39,24 +40,183 @@
 
 <form method="post">
     <div class="keyboard">
-        @foreach (var key in Model.Keyboard)
+        <div class="row-top">
+        @foreach (var key in Model.Keyboard.Take(10))
         {
-            <button class="key" asp-page-handler="AddLetter" asp-route-letter="@key">@key</button>
+            if (key.Active)
+            {
+                if (key.Value == "ENTER")
+                {
+                    <button class="key enter-key" asp-page-handler="SubmitGuess">ENTER</button>
+                }
+                else if (key.Value == "DELETE")
+                {
+                    <button class="key delete-key" asp-page-handler="DeleteLastLetter">&#215;</button>
+                }
+                else
+                {
+                    <button class="key" asp-page-handler="AddLetter" asp-route-letter="@key.Value">@key.Value</button>
+                }
+            }
+            else
+            {
+                <button class="key" disabled>@key.Value</button>
+            }
         }
-        <button class="key enter-key" asp-page-handler="SubmitGuess">ENTER</button>
-        <button class="key delete-key" asp-page-handler="DeleteLastLetter">&#x2715;</button>
+        </div>
+
+        <div class="row-middle">
+        @foreach (var key in Model.Keyboard.Skip(10).Take(9))
+        {
+            if (key.Active)
+            {
+                if (key.Value == "ENTER")
+                {
+                    <button class="key enter-key" asp-page-handler="SubmitGuess">ENTER</button>
+                }
+                else if (key.Value == "DELETE")
+                {
+                    <button class="key delete-key" asp-page-handler="DeleteLastLetter">&#215;</button>
+                }
+                else
+                {
+                    <button class="key" asp-page-handler="AddLetter" asp-route-letter="@key.Value">@key.Value</button>
+                }
+            }
+            else
+            {
+                <button class="key" disabled>@key.Value</button>
+            }
+        }
+        </div>
+        
+        <div class="row-bottom">
+            @foreach (var key in Model.Keyboard.Skip(19).Take(9))
+            {
+                if (key.Active)
+                {
+                    if (key.Value == "ENTER")
+                    {
+                        <button class="key enter-key" asp-page-handler="SubmitGuess">ENTER</button>
+                    }
+                    else if (key.Value == "DELETE")
+                    {
+                        <button class="key delete-key" asp-page-handler="DeleteLastLetter">&#215;</button>
+                    }
+                    else
+                    {
+                        <button class="key" asp-page-handler="AddLetter" asp-route-letter="@key.Value">@key.Value</button>
+                    }
+                }
+                else
+                {
+                    <button class="key" disabled>@key.Value</button>
+                }
+            }
+        </div>
+
     </div>
 </form>
 
-@if (Model.GuessSubmitted >= 0)  // Assuming that LastGuessedRowIndex is -1 by default, indicating no guessed row
+
+@if (Model.GuessSubmitted)  // Assuming that LastGuessedRowIndex is -1 by default, indicating no guessed row
 {
-    <script>
-        // Call the function to start the animation upon page load for the specified row
-        flipTilesSequentially(@Model.GuessSubmitted);
-    </script>
+    if (@WordleClone.src.WordleResult.Correct == @Model.Result || @WordleClone.src.WordleResult.IncorrectWord == @Model.Result)
+    {
+        var correct = @WordleClone.src.WordleResult.Correct == @Model.Result;
+        <script>
+        
+            // Call the function to start the animation upon page load for the specified row
+            flipTilesSequentially(@Model.CurrentRow, @Json.Serialize(Model.Keyboard), @correct.ToString().ToLower());
+        </script>
+    }
+    else if (@WordleClone.src.WordleResult.NotAWord == @Model.Result || WordleClone.src.WordleResult.IncorrectLength == Model.Result)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Your JavaScript code goes here
+                shakeRow(@Model.CurrentRow);
+            });
+        </script>
+
+    }
 }
 
+
+<div id="overlayModal" class="overlay">
+    <div class="overlay-content">
+        <div class="sentence">
+            <div class="overlay-tile">A</div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">B</div>
+            <div class="overlay-tile">A</div>
+            <div class="overlay-tile">B</div>
+            <div class="overlay-tile">Y</div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">G</div>
+            <div class="overlay-tile">I</div>
+            <div class="overlay-tile">R</div>
+            <div class="overlay-tile">L</div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">C</div>
+            <div class="overlay-tile">O</div>
+            <div class="overlay-tile">M</div>
+            <div class="overlay-tile">I</div>
+            <div class="overlay-tile">N</div>
+            <div class="overlay-tile">G</div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">S</div>
+            <div class="overlay-tile">O</div>
+            <div class="overlay-tile">O</div>
+            <div class="overlay-tile">N</div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">T</div>
+            <div class="overlay-tile">O</div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">A</div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">F</div>
+            <div class="overlay-tile">A</div>
+            <div class="overlay-tile">M</div>
+            <div class="overlay-tile">I</div>
+            <div class="overlay-tile">L</div>
+            <div class="overlay-tile">Y</div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">N</div>
+            <div class="overlay-tile">E</div>
+            <div class="overlay-tile">A</div>
+            <div class="overlay-tile">R</div>
+            <div class="spacer"></div>
+            <div class="overlay-tile">Y</div>
+            <div class="overlay-tile">O</div>
+            <div class="overlay-tile">U</div>
+        </div>
+    </div>
+</div>
+
+
 <style>
+    body {
+        margin: 0; /* Remove default margin */
+        min-height: 100vh; /* Ensure body takes up full viewport height */
+        display: grid; /* Use Grid */
+        text-align: center; /* Center the text inside <h2> */
+        place-items: center;
+        transform:scale(1.2);
+    }
+
+    .wordle-grid{
+        display:grid;
+        justify-content: center;
+        padding: 10px;
+    }
     .tile {
         position: relative;
         width: 40px;
@@ -102,8 +262,27 @@
 
     .keyboard {
         display: grid;
+        gap: 6px;
+        grid-template-rows: 1fr 1fr 1fr; /* 3 rows of equal height */
+        justify-content: center; /* horizontally center the content */
+        align-content: center;
+    }
+
+    /* Top and Bottom Rows */
+    .row-top, .row-bottom {
         grid-template-columns: repeat(10, 1fr);
-        gap: 5px;
+        align-content:center;
+        justify-content:center;
+        display:flex;
+        gap:6px;
+    }
+
+    /* Middle Row */
+    .row-middle {
+        grid-template-columns: repeat(12, 1fr); /* additional columns for the gaps */
+        display: flex;
+        gap:6px;
+        justify-content:center;
     }
 
     .key {
@@ -111,15 +290,94 @@
         border: none;
         background-color: #eee;
         cursor: pointer;
+        height:44px;
+        width:35px;
+        justify-content:center;
+    }
+
+    .key:disabled {
+        padding: 10px;
+        border: none;
+        color: #ccc; /* Adjust this value to your desired darker shade */
+        pointer-events: none; /* Optional: Ensure the disabled key doesn't receive click events */
+        cursor: not-allowed; /* Optional: Change cursor to indicate it's not clickable */
     }
 
     .enter-key {
-        grid-column: span 2;
+        grid-column: span 1;
+        padding: 0px;
+        width:54px;
+        font-size:smaller;
     }
 
     .delete-key {
         grid-column: span 1;
+        width:54px;
     }
+    #overlayModal{
+        display:none;
+    }
+    .overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8); /* Black background with opacity */
+        z-index: 1000; /* Ensure it appears on top of everything else */
+    }
+
+    .overlay-content {
+        position: relative;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        width: 100%; /* You can adjust width */
+        height: 75%;
+        max-width: 750px; /* You can adjust max-width */
+        margin:auto;
+        top: 10%;
+    }
+
+    .overlay-tile {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        margin: 2px;
+        margin-top:5px;
+        margin-bottom: 5px;
+        perspective: 1000px;
+        border: 1px solid #000;
+        transform-style: preserve-3d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color:hotpink;
+        font-weight:bold
+    }
+
+    .spacer {
+        width: 10px; /* Adjust to your desired space width */
+    }
+
+    .sentence {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center; /* This centers the tiles on the overlay */
+        align-items: center; /* Vertically aligns the tiles */
+        width: 100%; /* This will take the full width of the overlay-content */
+    }
+
+    .shake-tile {
+        animation: shake 0.5s;
+        animation-timing-function: linear;
+    }
+
+
+
 </style>
 
 
