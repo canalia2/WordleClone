@@ -16,9 +16,9 @@
         <div class="row">
             @for (int j = 0; j < Model.Words[i].Length; j++)
             {
-                var color = Model.Words[i][j].Color;
+                var color = Model.Words[i][j].Color == "green" ? "mediumseagreen" : Model.Words[i][j].Color;
                 var letter = Model.Words[i][j].Letter;
-                if (Model.CurrentRow > i)
+                if (Model.CurrentRow > i || Model.Lost)
                 {
                     <div class="tile" data-state="flipped">
                         <div class="tile-front" style="background-color: @color;">@letter.ToUpper()</div>
@@ -210,6 +210,14 @@
         text-align: center; /* Center the text inside <h2> */
         place-items: center;
         transform:scale(1.2);
+    }
+
+    /* Define a CSS variable */
+    :root {
+        --green-color: mediumseagreen;
+    }
+    .green-tile-background {
+        background-color: var(--green-color);
     }
 
     .wordle-grid{

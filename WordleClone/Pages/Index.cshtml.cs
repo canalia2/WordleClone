@@ -11,6 +11,7 @@ namespace WordleClone.Pages
         public int CurrentRow { get; private set; }
         public Word[] Words { get; private set; }
         public WordleResult Result { get; private set; }
+        public bool Lost { get; private set; }
 
         private Wordle _wordle;
         private IStorage _storage;
@@ -35,7 +36,7 @@ namespace WordleClone.Pages
 
             return Page();
         }
-
+       
         public IActionResult OnPostDeleteLastLetter()
         {
             if (_wordle.Finished())
@@ -76,6 +77,7 @@ namespace WordleClone.Pages
             CurrentRow = _wordle.GetCurrentRow();
             Words = _wordle.Words;
             Result = _wordle.GetCurrentResult();
+            Lost = _wordle.Lost;
             var usedLetters = _wordle.GetWrongLetters();
             Keyboard = new List<Key>();
             "QWERTYUIOPASDFGHJKLZXCVBNM".ToList().ForEach(key => Keyboard.Add(new Key(key.ToString(),!usedLetters.Contains(key))));

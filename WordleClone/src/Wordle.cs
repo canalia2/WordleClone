@@ -4,13 +4,13 @@ namespace WordleClone.src
     public class Wordle
     {
         public Word[] Words { get; private set; }
+        public bool Solved { get { return Words.Any(word => word.State == WordleState.Solved); } }
+        public bool Lost { get { return Words.Last().State == WordleState.Wrong; } }
         string _word = "APRIL";
-        IWebHostEnvironment _environment;
 
-        public Wordle(Word[] words, IWebHostEnvironment environment) 
+        public Wordle(Word[] words) 
         {
             Words = words;
-            _environment = environment;
         }
 
         public string GetCurrentWord()
@@ -72,7 +72,7 @@ namespace WordleClone.src
         /// <returns></returns>
         public bool Finished()
         {
-            return Words.Any(word => word.State == WordleState.Solved) || Words.Last().State == WordleState.Complete;
+            return Words.Any(word => word.State == WordleState.Solved) || Words.Last().State == WordleState.Wrong;
         }
 
         public bool AddLetter(string letter)
@@ -144,7 +144,7 @@ namespace WordleClone.src
                 }
                 else
                 {
-                    Words[row].State = WordleState.Complete;
+                    Words[row].State = WordleState.Wrong;
                     if (++row < Words.Length)
                     {
                         Words[row].State = WordleState.Active;
@@ -189,8 +189,10 @@ namespace WordleClone.src
                 }  
             }
 
-            if (currentRow == -1)
+            if (currentRow == -1 && Words.Last().State != WordleState.Wrong)
                 throw new Exception("No active state");
+            else if (currentRow == -1 && Words.Last().State == WordleState.Wrong)
+                currentRow = Words.Length - 1;
 
             return currentRow;
         }
@@ -214,7 +216,7 @@ namespace WordleClone.src
     public enum WordleState
     {
         Active,
-        Complete,
+        Wrong,
         Inactive,
         Guessing,
         Solved

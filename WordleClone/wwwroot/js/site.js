@@ -70,7 +70,9 @@ function jumpTilesSequentially(rowIndex) {
             tile.style.animation = 'jump 0.5s';
             var tileFront = tile.querySelector('.tile-front');
             var tileBack = tile.querySelector('.tile-back');
-            tileFront.style.backgroundColor = 'green';
+            let color = getComputedStyle(document.documentElement).getPropertyValue('--green-color').trim();
+
+            tileFront.style.backgroundColor = color;
 
             // Remove the animation once it completes to allow re-triggering
             tile.addEventListener('animationend', function handleAnimationEnd() {

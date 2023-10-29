@@ -3,13 +3,11 @@
     public class WordleFactory
     {
         private IStorage _storage;
-        private IWebHostEnvironment _environment;
-        const int _rows = 5;
+        const int _rows = 6;
         const int _columns = 5;
-        public WordleFactory(IStorage storage, IWebHostEnvironment environment) 
+        public WordleFactory(IStorage storage) 
         { 
             _storage = storage;
-            _environment = environment;
         }
 
         public Wordle Create()
@@ -35,7 +33,7 @@
                 words[i] = new Word(state, word, colors, result);
             }
 
-            return new Wordle(words, _environment);
+            return new Wordle(words);
         }
 
         private string[] GetColors(int row)
